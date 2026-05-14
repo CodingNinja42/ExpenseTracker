@@ -1,0 +1,56 @@
+@model ExpenseTracker.Models.Category
+@{
+    ViewData["Title"] = Model.CategoryId == 0 ? "New Category" : "Edit Category";
+}
+
+<div class="form-page">
+    <div class="card-glass form-card">
+        <div class="form-card-header">
+            <h2>
+                <i class="fas @(Model.CategoryId == 0 ? "fa-plus-circle" : "fa-edit")"></i>
+                @ViewData["Title"]
+            </h2>
+            <p>@(Model.CategoryId == 0 ? "Create a new category for your transactions" : "Update category details")</p>
+        </div>
+
+        <form asp-action="AddOrEdit" method="post" id="category-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="CategoryId" />
+
+            <div class="form-group-premium">
+                <label asp-for="Title" class="form-label-premium">
+                    <i class="fas fa-heading"></i> Title
+                </label>
+                <input asp-for="Title" class="form-control-premium" placeholder="e.g. Groceries, Salary, Rent..." id="input-title" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="form-group-premium">
+                <label asp-for="Icon" class="form-label-premium">
+                    <i class="fas fa-smile"></i> Icon (Emoji)
+                </label>
+                <input asp-for="Icon" class="form-control-premium" placeholder="e.g. 🛒 🏠 💰 🚗 🎮" id="input-icon" />
+                <span class="form-hint">Paste an emoji that represents this category</span>
+            </div>
+
+            <div class="form-group-premium">
+                <label asp-for="Type" class="form-label-premium">
+                    <i class="fas fa-exchange-alt"></i> Type
+                </label>
+                <select asp-for="Type" class="form-control-premium" id="select-type">
+                    <option value="Income">Income</option>
+                    <option value="Expense">Expense</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <a asp-action="Index" class="btn-secondary-premium" id="btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn-premium" id="btn-submit">
+                    <i class="fas fa-check"></i> @(Model.CategoryId == 0 ? "Create" : "Update")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

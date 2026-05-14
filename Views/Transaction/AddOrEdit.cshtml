@@ -1,0 +1,62 @@
+@model ExpenseTracker.Models.Transaction
+@{
+    ViewData["Title"] = Model.TransactionId == 0 ? "New Transaction" : "Edit Transaction";
+}
+
+<div class="form-page">
+    <div class="card-glass form-card">
+        <div class="form-card-header">
+            <h2>
+                <i class="fas @(Model.TransactionId == 0 ? "fa-plus-circle" : "fa-edit")"></i>
+                @ViewData["Title"]
+            </h2>
+            <p>@(Model.TransactionId == 0 ? "Record a new income or expense" : "Update transaction details")</p>
+        </div>
+
+        <form asp-action="AddOrEdit" method="post" id="transaction-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="TransactionId" />
+
+            <div class="form-group-premium">
+                <label asp-for="CategoryId" class="form-label-premium">
+                    <i class="fas fa-tag"></i> Category
+                </label>
+                <select asp-for="CategoryId" class="form-control-premium" id="select-category"
+                        asp-items="@(new SelectList(ViewBag.Categories, "CategoryId", "TitleWithIcon"))">
+                </select>
+                <span asp-validation-for="CategoryId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group-premium">
+                <label asp-for="Amount" class="form-label-premium">
+                    <i class="fas fa-rupee-sign"></i> Amount
+                </label>
+                <input asp-for="Amount" class="form-control-premium" placeholder="Enter amount" type="number" min="1" id="input-amount" />
+                <span asp-validation-for="Amount" class="text-danger"></span>
+            </div>
+
+            <div class="form-group-premium">
+                <label asp-for="Note" class="form-label-premium">
+                    <i class="fas fa-sticky-note"></i> Note (Optional)
+                </label>
+                <input asp-for="Note" class="form-control-premium" placeholder="e.g. Weekly groceries" id="input-note" />
+            </div>
+
+            <div class="form-group-premium">
+                <label asp-for="Date" class="form-label-premium">
+                    <i class="fas fa-calendar"></i> Date
+                </label>
+                <input asp-for="Date" class="form-control-premium" type="date" id="input-date" />
+            </div>
+
+            <div class="form-actions">
+                <a asp-action="Index" class="btn-secondary-premium" id="btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn-premium" id="btn-submit">
+                    <i class="fas fa-check"></i> @(Model.TransactionId == 0 ? "Create" : "Update")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

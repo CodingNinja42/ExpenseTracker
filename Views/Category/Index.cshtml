@@ -1,0 +1,67 @@
+@model IEnumerable<ExpenseTracker.Models.Category>
+@{
+    ViewData["Title"] = "Categories";
+}
+
+<div class="page-header-row">
+    <div class="page-header-info">
+        <p class="page-subtitle">Manage your income and expense categories</p>
+    </div>
+    <a asp-action="AddOrEdit" class="btn-premium" id="btn-add-category">
+        <i class="fas fa-plus"></i> Add Category
+    </a>
+</div>
+
+<div class="card-glass">
+    <div class="table-responsive">
+        <table class="table premium-table" id="categories-table">
+            <thead>
+                <tr>
+                    <th>Icon</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th style="width: 160px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><span class="category-icon-cell">@item.Icon</span></td>
+                        <td><span class="fw-500">@item.Title</span></td>
+                        <td>
+                            <span class="type-badge @(item.Type == "Income" ? "type-income" : "type-expense")">
+                                @item.Type
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a asp-action="AddOrEdit" asp-route-id="@item.CategoryId" class="btn-action btn-edit" title="Edit">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@item.CategoryId" method="post" style="display:inline;"
+                                      onsubmit="return confirm('Are you sure you want to delete this category?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-action btn-delete" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="fas fa-tags"></i>
+            <h4>No categories yet</h4>
+            <p>Create your first category to start tracking expenses</p>
+            <a asp-action="AddOrEdit" class="btn-premium">
+                <i class="fas fa-plus"></i> Add Category
+            </a>
+        </div>
+    }
+</div>

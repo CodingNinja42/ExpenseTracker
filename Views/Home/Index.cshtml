@@ -1,0 +1,258 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="dashboard-grid">
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div class="summary-card income-card" id="card-income">
+            <div class="card-icon">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+            <div class="card-info">
+                <span class="card-label">Total Income</span>
+                <span class="card-value">@ViewBag.TotalIncome</span>
+            </div>
+            <div class="card-period">Last 7 Days</div>
+        </div>
+
+        <div class="summary-card expense-card" id="card-expense">
+            <div class="card-icon">
+                <i class="fas fa-arrow-up"></i>
+            </div>
+            <div class="card-info">
+                <span class="card-label">Total Expense</span>
+                <span class="card-value">@ViewBag.TotalExpense</span>
+            </div>
+            <div class="card-period">Last 7 Days</div>
+        </div>
+
+        <div class="summary-card balance-card" id="card-balance">
+            <div class="card-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="card-info">
+                <span class="card-label">Balance</span>
+                <span class="card-value">@ViewBag.Balance</span>
+            </div>
+            <div class="card-period">Last 7 Days</div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+        <!-- Spline Chart -->
+        <div class="chart-card" id="spline-chart-card">
+            <div class="chart-header">
+                <h3><i class="fas fa-chart-line"></i> Income vs Expense</h3>
+                <span class="chart-subtitle">Last 7 Days</span>
+            </div>
+            <div class="chart-body">
+                <canvas id="splineChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Doughnut Chart -->
+        <div class="chart-card" id="doughnut-chart-card">
+            <div class="chart-header">
+                <h3><i class="fas fa-chart-pie"></i> Expense By Category</h3>
+                <span class="chart-subtitle">Last 7 Days</span>
+            </div>
+            <div class="chart-body">
+                <canvas id="doughnutChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="recent-transactions-card" id="recent-transactions">
+        <div class="chart-header">
+            <h3><i class="fas fa-clock"></i> Recent Transactions</h3>
+            <a asp-controller="Transaction" asp-action="Index" class="view-all-link">
+                View All <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="table premium-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.RecentTransactions != null)
+                    {
+                        @foreach (ExpenseTracker.Models.Transaction item in ViewBag.RecentTransactions)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="category-badge">
+                                        @item.CategoryTitleWithIcon
+                                    </span>
+                                </td>
+                                <td>@item.Date.ToString("dd MMM yyyy")</td>
+                                <td>
+                                    <span class="@(item.Category?.Type == "Income" ? "amount-income" : "amount-expense")">
+                                        @item.FormattedAmount
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Doughnut Chart
+        const doughnutData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.DoughnutChartData));
+        if (doughnutData && doughnutData.length > 0) {
+            const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+            const gradientColors = [
+                '#6366f1', '#8b5cf6', '#a855f7', '#ec4899',
+                '#f43f5e', '#f97316', '#eab308', '#22c55e',
+                '#14b8a6', '#06b6d4', '#3b82f6', '#6d28d9'
+            ];
+
+            new Chart(doughnutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: doughnutData.map(d => d.categoryTitleWithIcon),
+                    datasets: [{
+                        data: doughnutData.map(d => d.amount),
+                        backgroundColor: gradientColors.slice(0, doughnutData.length),
+                        borderColor: 'rgba(15, 15, 26, 0.8)',
+                        borderWidth: 3,
+                        hoverBorderWidth: 0,
+                        hoverOffset: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#94a3b8',
+                                padding: 16,
+                                font: { family: 'Inter', size: 12 },
+                                usePointStyle: true,
+                                pointStyleWidth: 10,
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 15, 26, 0.95)',
+                            titleColor: '#e2e8f0',
+                            bodyColor: '#94a3b8',
+                            borderColor: 'rgba(99, 102, 241, 0.3)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8,
+                            titleFont: { family: 'Inter', weight: '600' },
+                            bodyFont: { family: 'Inter' },
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + doughnutData[context.dataIndex].formattedAmount;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('doughnutChart').parentElement.innerHTML =
+                '<div class="empty-chart"><i class="fas fa-chart-pie"></i><p>No expense data yet</p></div>';
+        }
+
+        // Spline Chart
+        const splineData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.SplineChartData));
+        const splineCtx = document.getElementById('splineChart').getContext('2d');
+
+        const incomeGradient = splineCtx.createLinearGradient(0, 0, 0, 300);
+        incomeGradient.addColorStop(0, 'rgba(34, 197, 94, 0.3)');
+        incomeGradient.addColorStop(1, 'rgba(34, 197, 94, 0)');
+
+        const expenseGradient = splineCtx.createLinearGradient(0, 0, 0, 300);
+        expenseGradient.addColorStop(0, 'rgba(239, 68, 68, 0.3)');
+        expenseGradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
+
+        new Chart(splineCtx, {
+            type: 'line',
+            data: {
+                labels: splineData.map(d => d.day),
+                datasets: [
+                    {
+                        label: 'Income',
+                        data: splineData.map(d => d.income),
+                        borderColor: '#22c55e',
+                        backgroundColor: incomeGradient,
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2.5,
+                        pointBackgroundColor: '#22c55e',
+                        pointBorderColor: '#0f0f1a',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 7,
+                    },
+                    {
+                        label: 'Expense',
+                        data: splineData.map(d => d.expense),
+                        borderColor: '#ef4444',
+                        backgroundColor: expenseGradient,
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2.5,
+                        pointBackgroundColor: '#ef4444',
+                        pointBorderColor: '#0f0f1a',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 7,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(148, 163, 184, 0.08)' },
+                        ticks: { color: '#94a3b8', font: { family: 'Inter', size: 11 } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(148, 163, 184, 0.08)' },
+                        ticks: { color: '#94a3b8', font: { family: 'Inter', size: 11 } }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#94a3b8',
+                            font: { family: 'Inter', size: 12 },
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 15, 26, 0.95)',
+                        titleColor: '#e2e8f0',
+                        bodyColor: '#94a3b8',
+                        borderColor: 'rgba(99, 102, 241, 0.3)',
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: { family: 'Inter', weight: '600' },
+                        bodyFont: { family: 'Inter' },
+                    }
+                }
+            }
+        });
+    </script>
+}
